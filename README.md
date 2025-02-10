@@ -71,24 +71,20 @@ npm veya yarn
 Adım Adım Kurulum
 Depoyu Klonlayın:
 
-bash
-Kopyala
+
 git clone <repository-url>
 cd <repository-directory>
 Bağımlılıkları Yükleyin:
 
-bash
-Kopyala
+
 npm install
 veya yarn kullanıyorsanız:
 
-bash
-Kopyala
+
 yarn install
 Çevresel Değişkenleri Ayarlayın: Proje kök dizininde bir .env dosyası oluşturun ve Firebase yapılandırma bilgilerinizi ekleyin:
 
-env
-Kopyala
+
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
@@ -97,13 +93,11 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 Geliştirme Sunucusunu Başlatın:
 
-bash
-Kopyala
+
 npm run dev
 veya yarn kullanıyorsanız:
 
-bash
-Kopyala
+
 yarn dev
 Tarayıcıda Açın: Geliştirme sunucusu çalıştıktan sonra, tarayıcınızda http://localhost:3000 (veya Vite'nin belirttiği port) adresine gidin.
 
@@ -122,10 +116,6 @@ Bu proje MIT Lisansı kapsamında lisanslanmıştır.
 
 Bu README, projenizin temel özelliklerini, kullanılan teknolojileri ve geliştirme sürecini özetlemektedir. Projenizi GitHub'a pushladıktan sonra, diğer geliştiriciler için de yol gösterici olacaktır. İyi çalışmalar!
 
-yaml
-Kopyala
 
----
-
-```
 # DevConnectSocial
+```
