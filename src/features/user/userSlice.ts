@@ -1,6 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { signInWithEmail, logout } from '../../services/auth';
-import { UserCredential } from 'firebase/auth';
 import { AppUser } from '../../types/user';
 
 // Kullanıcıyla ilgili state yapısı
@@ -19,32 +18,15 @@ const initialState: UserState = {
 
 // loginUser thunk'ı: Firebase'den dönen UserCredential içinden gerekli alanları çıkarıp sade bir nesne oluşturuyoruz.
 export const loginUser = createAsyncThunk<
-  { user: AppUser }, // Döndürülecek payload, sade bir kullanıcı nesnesi
-  { email: string; password: string }, // Parametreler
-  { rejectValue: string } // Hata durumunda dönecek mesajın tipi
+  { user: AppUser }, // 🔥 Artık `AppUser` tam uyumlu
+  { email: string; password: string },
+  { rejectValue: string }
 >('user/loginUser', async ({ email, password }, { rejectWithValue }) => {
   try {
-    // signInWithEmail, Firebase'den UserCredential döndürüyor
-    const userCredential: UserCredential = await signInWithEmail(
-      email,
-      password,
-    );
-    const firebaseUser = userCredential.user;
-
-    // Sadece ihtiyacımız olan alanları içeren serileştirilebilir bir AppUser nesnesi oluşturuyoruz.
-    const appUser: AppUser = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
-      photoURL: firebaseUser.photoURL,
-      phoneNumber: firebaseUser.phoneNumber || null,
-    };
-
-    // Oluşturduğumuz nesneyi payload olarak döndürüyoruz.
+    const appUser: AppUser = await signInWithEmail(email, password);
     return { user: appUser };
   } catch (error: unknown) {
     if (error instanceof Error) {
-      // Firebase hata mesajına göre özel mesajlar oluşturabiliriz.
       if (error.message.includes('auth/wrong-password')) {
         return rejectWithValue('Parola bilgisi hatalı');
       }
@@ -82,6 +64,16 @@ const userSlice = createSlice({
       state.status = 'succeeded';
       state.error = null;
     },
+    logoutSuccess: (state) => {
+      state.currentUser = null;
+      state.status = 'idle';
+      state.error = null;
+    },
+    updateUser: (state, action: PayloadAction<Partial<AppUser>>) => {
+      if (state.currentUser) {
+        state.currentUser = { ...state.currentUser, ...action.payload };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -93,7 +85,15 @@ const userSlice = createSlice({
       // loginUser işlemi başarılı olduğunda: currentUser state'ine sade AppUser nesnesini atıyoruz.
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.currentUser = action.payload.user;
+        state.currentUser = {
+          uid: action.payload.user.uid || '', // ✅ UID'nin her zaman string olmasını garanti et
+          email: action.payload.user.email || null,
+          displayName:
+            action.payload.user.displayName || 'Bilinmeyen Kullanıcı',
+          photoURL:
+            action.payload.user.photoURL || 'https://via.placeholder.com/150',
+          phoneNumber: action.payload.user.phoneNumber || null,
+        } as AppUser; // ✅ Zorla `AppUser` olarak tip ata
       })
       // loginUser işlemi hata aldığında
       .addCase(loginUser.rejected, (state, action) => {
@@ -117,5 +117,5 @@ const userSlice = createSlice({
       });
   },
 });
-
+export const { loginSuccess, logoutSuccess, updateUser } = userSlice.actions;
 export default userSlice.reducer;

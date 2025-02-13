@@ -6,6 +6,7 @@ import {
   faUserPlus,
   faEnvelope,
   faLock,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,13 +14,16 @@ import Header from '../components/Header';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [photoURL, setPhotoURL] = useState('');
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signUpWithEmail(email, password);
+      await signUpWithEmail(email, password, fullName, photoURL);
       toast.success('Kayıt başarılı! Lütfen giriş yapınız.');
       navigate('/login');
     } catch (error) {
@@ -36,20 +40,39 @@ const SignUp = () => {
           "url('https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmd6cGVma2V6cjl1ZHNndXdiaGI5bXY5azJ5bWVpcTdlbDIzaWFsYiZlcD12MV9pbnRlcm5naWZfYnlfaWQmY3Q9Zw/7FrOU9tPbgAZtxV5mb/giphy.gif')",
       }}
     >
-      {/* Üst Kısım: Header */}
       <div className="h-[10vh]">
         <Header title="Geliştiricilerin Sosyal Ağı DevConnect'e hoş geldiniz. Lütfen kaydolun." />
       </div>
 
-      {/* İçerik Bölümü: Sign-Up Formu */}
       <div className="flex-1 flex justify-center items-center">
         <div className="relative z-10 bg-white rounded-lg shadow-xl p-10 max-w-md w-full">
           <h2 className="text-center text-2xl font-bold text-indigo-500 mb-6">
             Sign Up
           </h2>
 
-          <form onSubmit={handleEmailSignup} className="space-y-12">
+          <form onSubmit={handleEmailSignup} className="space-y-6">
             <div className="space-y-2">
+              {/* İsim */}
+              <div className="relative w-full">
+                <p className="block text-sm text-indigo-500 font-medium mb-1">
+                  Full Name
+                </p>
+                <div className="relative w-full">
+                  <FontAwesomeIcon
+                    icon={faUser}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  />
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-10 p-3 w-full border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* E-mail */}
               <div className="relative w-full">
                 <p className="block text-sm text-indigo-500 font-medium mb-1">
                   E-mail
@@ -69,6 +92,7 @@ const SignUp = () => {
                 </div>
               </div>
 
+              {/* Şifre */}
               <div className="relative w-full">
                 <p className="block text-sm text-indigo-500 font-medium mb-1">
                   Password

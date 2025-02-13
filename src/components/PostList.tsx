@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ref, query, orderByChild, onValue, off } from 'firebase/database';
+import { ref, get, query, orderByChild, onValue, off } from 'firebase/database';
 import { db } from '../services/firebase';
 
 interface Post {
@@ -14,14 +14,16 @@ interface Post {
 
 const getUserById = async (userId: string): Promise<string> => {
   try {
-    // Firebase Realtime Database'den kullanıcı bilgilerini çekiyoruz
+    // Kullanıcıyı Firebase Realtime Database'den çek
     const userRef = ref(db, `users/${userId}`);
-    return new Promise((resolve) => {
-      onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-        resolve(data?.username || 'Bilinmeyen Kullanıcı');
-      });
-    });
+    const userSnapshot = await get(userRef);
+
+    if (userSnapshot.exists()) {
+      const userData = userSnapshot.val();
+      return userData.displayName || 'Bilinmeyen Kullanıcı';
+    } else {
+      return 'Bilinmeyen Kullanıcı';
+    }
   } catch (error) {
     console.error('Kullanıcı bilgisi alınırken hata oluştu:', error);
     return 'Bilinmeyen Kullanıcı';

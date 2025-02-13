@@ -1,86 +1,178 @@
-import { auth, googleProvider, githubProvider } from './firebase';
+import { auth, db, googleProvider, githubProvider } from './firebase';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  updateProfile,
   signOut,
   UserCredential,
-  getAuth,
 } from 'firebase/auth';
+import { ref, set, get } from 'firebase/database';
+import { AppUser } from '../types/user';
 
-// Google ile giriş yapma fonksiyonu
-export const signInWithGoogle = async (
-  navigate: (path: string) => void,
-): Promise<void> => {
+// 📌 Kullanıcı bilgilerini Firebase Realtime Database'e kaydetme fonksiyonu
+const saveUserToDB = async (user: AppUser) => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log('Google Login Successful:', result.user);
-    navigate('/'); // navigate fonksiyonunu dışarıdan çağırıyoruz
+    await set(ref(db, `users/${user.uid}`), user);
+    console.log("✅ Kullanıcı bilgileri Firebase Database'e kaydedildi:", user);
   } catch (error) {
-    console.error('Google login error:', error);
-    throw error; // Hatanın dışarı taşınması, Redux thunk’da yakalanabilir.
+    console.error("❌ Kullanıcı Firebase Database'e kaydedilemedi:", error);
   }
 };
 
-// GitHub ile giriş yapma fonksiyonu
-export const signInWithGithub = async (
+// 📌 Google ile giriş yapma fonksiyonu
+export const signInWithGoogle = async (
   navigate: (path: string) => void,
-): Promise<void> => {
+): Promise<AppUser> => {
   try {
-    const result = await signInWithPopup(auth, githubProvider);
-    console.log('GitHub Login Successful:', result.user);
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    const userRef = ref(db, `users/${user.uid}`);
+    const userSnapshot = await get(userRef);
+
+    const appUser: AppUser = {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.displayName || 'Bilinmeyen Kullanıcı',
+      photoURL: user.photoURL || 'https://via.placeholder.com/150',
+      phoneNumber: user.phoneNumber || null,
+      emailVerified: user.emailVerified,
+      isAnonymous: user.isAnonymous,
+      tenantId: user.tenantId || null,
+    };
+
+    if (!userSnapshot.exists()) {
+      await saveUserToDB(appUser);
+    }
+
     navigate('/');
+    return appUser;
   } catch (error) {
-    console.error('GitHub login error:', error);
+    console.error('❌ Google login error:', error);
     throw error;
   }
 };
 
-// E-posta ve şifre ile giriş yapma fonksiyonu
-export const signInWithEmail = async (
-  email: string,
-  password: string,
-): Promise<UserCredential> => {
+// 📌 GitHub ile giriş yapma fonksiyonu
+export const signInWithGithub = async (
+  navigate: (path: string) => void,
+): Promise<AppUser> => {
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    console.log('Email Login Successful:', result.user);
-    return result;
+    const result = await signInWithPopup(auth, githubProvider);
+    const user = result.user;
+
+    const userRef = ref(db, `users/${user.uid}`);
+    const userSnapshot = await get(userRef);
+
+    const appUser: AppUser = {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.displayName || 'Bilinmeyen Kullanıcı',
+      photoURL: user.photoURL || 'https://via.placeholder.com/150',
+      phoneNumber: user.phoneNumber || null,
+      emailVerified: user.emailVerified,
+      isAnonymous: user.isAnonymous,
+      tenantId: user.tenantId || null,
+    };
+
+    if (!userSnapshot.exists()) {
+      await saveUserToDB(appUser);
+    }
+
+    navigate('/');
+    return appUser;
   } catch (error) {
-    console.error('Email login error:', error);
-    throw error; // Hata fırlatılıyor ki, thunk’da yakalanabilsin.
+    console.error('❌ GitHub login error:', error);
+    throw error;
   }
 };
 
-// E-posta ve şifre ile kayıt olma fonksiyonu
-export const signUpWithEmail = async (email: string, password: string) => {
-  const auth = getAuth();
+// 📌 E-posta ve şifre ile giriş yapma fonksiyonu
+export const signInWithEmail = async (
+  email: string,
+  password: string,
+): Promise<AppUser> => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(
+    const userCredential: UserCredential = await signInWithEmailAndPassword(
       auth,
       email,
       password,
     );
     const user = userCredential.user;
-    console.log('Kullanıcı başarıyla kaydedildi:', user);
-    return user;
+
+    const appUser: AppUser = {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.displayName || 'Bilinmeyen Kullanıcı',
+      photoURL: user.photoURL || 'https://via.placeholder.com/150',
+      phoneNumber: user.phoneNumber || null,
+      emailVerified: user.emailVerified,
+      isAnonymous: user.isAnonymous,
+      tenantId: user.tenantId || null,
+    };
+
+    return appUser;
   } catch (error) {
-    if (error instanceof Error) {
-      console.error('Kayıt hatası:', error.message);
-      throw error;
-    } else {
-      console.error('Bilinmeyen bir hata oluştu:', error);
-      throw new Error('Bilinmeyen bir hata oluştu');
-    }
+    console.error('❌ Email login error:', error);
+    throw error;
   }
 };
 
-// Kullanıcı çıkış yapma fonksiyonu
+// 📌 E-posta ve şifre ile kayıt olma fonksiyonu
+export const signUpWithEmail = async (
+  email: string,
+  password: string,
+  fullName: string,
+  photoURL?: string,
+): Promise<AppUser> => {
+  try {
+    console.log('📌 Kayıt işlemi başladı...');
+
+    const userCredential: UserCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
+    console.log("✅ Firebase Auth'a kayıt başarılı:", userCredential);
+
+    const user = userCredential.user;
+
+    await updateProfile(user, {
+      displayName: fullName,
+      photoURL: photoURL || 'https://via.placeholder.com/150',
+    });
+    console.log('✅ Kullanıcı profili güncellendi:', user);
+
+    const appUser: AppUser = {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: fullName,
+      photoURL: photoURL || 'https://via.placeholder.com/150',
+      phoneNumber: user.phoneNumber || null,
+      emailVerified: user.emailVerified,
+      isAnonymous: user.isAnonymous,
+      tenantId: user.tenantId || null,
+    };
+
+    console.log("✅ Firebase Realtime Database'e kaydediliyor...");
+    await saveUserToDB(appUser);
+    console.log("✅ Kullanıcı Firebase Database'e kaydedildi:", appUser);
+
+    return appUser;
+  } catch (error) {
+    console.error('❌ Kayıt sırasında hata oluştu:', error);
+    throw error;
+  }
+};
+
+// 📌 Kullanıcı çıkış yapma fonksiyonu
 export const logout = async (): Promise<void> => {
   try {
     await signOut(auth);
-    console.log('User logged out');
+    console.log('✅ Kullanıcı çıkış yaptı.');
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('❌ Logout error:', error);
     throw error;
   }
 };

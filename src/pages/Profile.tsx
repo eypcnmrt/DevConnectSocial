@@ -1,83 +1,102 @@
-// src/pages/Profile.tsx
-import React from 'react';
-// Redux store'dan currentUser bilgisini çekmek ve dispatch işlemi yapmak için gerekli hook'ları import ediyoruz.
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../app/store';
-// Logout işlemi için oluşturduğumuz logoutUser thunk'ını import ediyoruz.
 import { logoutUser } from '../features/user/userSlice';
-// Yönlendirme (redirect) işlemi için useNavigate hook'unu import ediyoruz.
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPen, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import ProfileEdit from '../components/ProfileEdit';
 
 const Profile: React.FC = () => {
-  // currentUser: Giriş yapmış kullanıcının bilgilerini içerir (örneğin, uid, displayName, photoURL, email, vb.).
   const currentUser = useSelector((state: RootState) => state.user.currentUser);
-
-  // dispatch fonksiyonunu tip güvenli şekilde elde ediyoruz.
   const dispatch = useDispatch<AppDispatch>();
-
-  // Yönlendirme işlemleri için useNavigate hook'unu kullanıyoruz.
   const navigate = useNavigate();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // handleLogout: Çıkış yap butonuna tıklanıldığında çalışır.
   const handleLogout = async () => {
-    // logoutUser thunk'ını dispatch ediyoruz. unwrap() ile başarılı sonucu veya hatayı yakalıyoruz.
     dispatch(logoutUser())
       .unwrap()
       .then(() => {
-        // Çıkış işlemi başarılı olursa, kullanıcıyı /login sayfasına yönlendiriyoruz.
         navigate('/login');
       })
       .catch((error) => {
-        // Hata durumunda hata mesajını konsola yazdırıyoruz.
         console.error('Logout failed:', error);
       });
   };
 
   return (
-    // Dış kapsayıcı div: Sayfanın tamamını kaplar, arka planı belirttiğiniz GIF ile ayarlar.
-    <div
-      className="min-h-screen bg-cover bg-center flex justify-center items-center"
-      style={{
-        backgroundImage:
-          "url('https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmd6cGVma2V6cjl1ZHNndXdiaGI5bXY5azJ5bWVpcTdlbDIzaWFsYiZlcD12MV9pbnRlcm5naWZfYnlfaWQmY3Q9Zw/7FrOU9tPbgAZtxV5mb/giphy.gif')",
-      }}
-    >
-      {/* İçerik Kartı: Kullanıcı bilgilerini daha okunaklı hale getirmek için yarı şeffaf beyaz bir kart */}
-      <div className="bg-white bg-opacity-80 p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h1 className="text-2xl font-bold mb-4 text-center">Profilim</h1>
-        {currentUser ? (
-          <div className="flex flex-col items-center space-y-4">
-            {/* Profil Resmi: Kullanıcının photoURL'si varsa onu gösterir, yoksa placeholder kullanılır */}
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Profil Alanı */}
+      <div className="flex flex-1 flex-col max-w-3xl mx-auto bg-white shadow-lg">
+        {/* Kapak Fotoğrafı */}
+        <div className="relative h-48 bg-indigo-500"></div>
+
+        {/* Profil İçeriği */}
+        <div className="p-6 relative">
+          {/* Profil Fotoğrafı */}
+          <div className="absolute top-[-50px] left-6">
             <img
-              src={currentUser.photoURL || 'https://via.placeholder.com/150'}
+              src={currentUser?.photoURL || 'https://via.placeholder.com/150'}
               alt="Profil Resmi"
-              className="w-32 h-32 rounded-full object-cover"
+              className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
             />
-            {/* Kullanıcının Adı */}
-            <p className="text-xl font-semibold">
-              {currentUser.displayName || 'İsim bulunamadı'}
-            </p>
-            {/* Kullanıcının E-posta Adresi */}
+          </div>
+
+          {/* Kullanıcı Bilgileri */}
+          <div className="mt-10">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {currentUser?.displayName || 'İsim bulunamadı'}
+            </h1>
             <p className="text-gray-600">
-              {currentUser.email || 'Email bulunamadı'}
+              {currentUser?.email || 'Email bulunamadı'}
             </p>
-            {/* Telefon Numarası varsa gösterilir */}
-            {currentUser.phoneNumber && (
+
+            {/* Telefon Numarası */}
+            {currentUser?.phoneNumber && (
               <p className="text-gray-600">{currentUser.phoneNumber}</p>
             )}
-            {/* Logout Butonu */}
+          </div>
+
+          {/* Profili Düzenle ve Logout Butonları */}
+          <div className="mt-4 flex space-x-4">
             <button
-              onClick={handleLogout} // Kullanıcı bu butona tıkladığında handleLogout çalışır.
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition"
             >
-              Çıkış Yap
+              <FontAwesomeIcon icon={faPen} />
+              <span>Profili Düzenle</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} />
+              <span>Çıkış Yap</span>
             </button>
           </div>
-        ) : (
-          // Eğer currentUser bilgisi alınamamışsa, bilgilendirici bir mesaj gösterilir.
-          <p className="text-center">Kullanıcı bilgileri bulunamadı.</p>
-        )}
+        </div>
       </div>
+
+      {/* Modal - Profili Düzenleme */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+            >
+              ✕
+            </button>
+            {/* 🔥 Burada onClose prop'unu ProfileEdit'e geçiriyoruz */}
+            <ProfileEdit onClose={() => setIsEditModalOpen(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
