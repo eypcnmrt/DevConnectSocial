@@ -9,13 +9,13 @@ import PrivateRoute from './components/PrivateRoute';
 import SignUp from './pages/SignUp';
 import { ToastContainer } from 'react-toastify';
 import ProfileInfo from './pages/ProfileInfo';
+import useAuthSession from './hooks/useAuthSession';
 
 function App() {
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, () => {
-      // Kullanıcı durumu güncellendiğinde bir şey yapma, sadece kontrol et
-    });
+  useAuthSession(); // Otomatik oturum yönetimini başlat
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, () => {});
     return () => unsubscribe();
   }, []);
 

@@ -77,7 +77,11 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    // Eğer senkron aksiyonlar ekleyecekseniz buraya yazabilirsiniz.
+    loginSuccess: (state, action) => {
+      state.currentUser = action.payload;
+      state.status = 'succeeded';
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder

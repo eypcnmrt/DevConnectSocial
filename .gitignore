@@ -24,3 +24,7 @@ hakkında.md
 *.njsproj
 *.sln
 *.sw?
+# Firebase servis hesabı ve CORS ayar dosyaları
+serviceAccountKey.json
+cors.json
+set-cors.js

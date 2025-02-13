@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,7 +12,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+export const db = getDatabase(
+  app,
+  'https://devconnect-283da-default-rtdb.europe-west1.firebasedatabase.app/',
+);
 export const auth = getAuth(app);
+
 export default app;
 
 export const googleProvider = new GoogleAuthProvider();
